@@ -20,7 +20,9 @@ MySQL (MariaDB) + NodeJs + GraphQL
 
 Dev-окружение позволяет применять изменения без пересборки образа и перезапуска контейнера. Достигается пробросом каталога /app в контейнер.
 
-## Запуск
+## Запуск через docker-compose
+
+Запуск:
 
 ```console
 $ docker-compose -f demo.yml up -d --build
@@ -33,7 +35,11 @@ Successfully built a480bf0512c3
 Successfully tagged graphql-test_app:latest
 Creating graphql-test_db_1 ... done
 Creating graphql-test_app_1 ... done
+```
 
+Завершение:
+
+```console
 $ docker-compose -f demo.yml down
 Stopping graphql-test_app_1 ... done
 Stopping graphql-test_db_1  ... done
@@ -42,7 +48,17 @@ Removing graphql-test_db_1  ... done
 Removing network graphql-test_net
 ```
 
+Удаление образа и тома:
+
+```console
+$ docker volume rm graphql-test_data
+$ docker image  rm graphql-test_app
+```
+
 ## Запуск с помощью скрипта
+
+**ВНИМАНИЕ!** В Mac OS используется сильно устаревшая версия bash.
+Необходимо установить актуальную версию через `brew install bash` и запускать все скрипты через `/usr/local/bin/bash <script>`.
 
 ```shell
 ./demo.sh
