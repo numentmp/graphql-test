@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Demo page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="defaults.css"/>
+    <link rel="stylesheet" href="index.css"/>
+</head>
+<body>
+<h1>Демонстрационная страница</h1>
+
+<div class="flex-container">
+    <div class="panel">
+        <div class="panel-header panel-blue">Вариант API</div>
+        <div class="panel-body">
+            <div class="label">Использовать:</div>
+
+            <ul id="switch-endpoint" class="switch">
+                <li data-endpoint="profile" class="switch-active">MySQL</li>
+                <li data-endpoint="dummy">Dummy</li>
+            </ul>
+
+            <div class="label">Открыть Graph<em style="font-family: georgia, serif;">i</em>QL:</div>
+
+            <ul class="list">
+                <li><a href="mysql" class="link-local" target="_blank">MySQL</a></li>
+                <li><a href="dummy" class="link-local" target="_blank">Dummy</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header panel-blue">Выборка данных</div>
+        <div class="panel-body">
+            <ul id="switch-query" class="switch switch-query" data-selector=".switch-query">
+                <li data-query="q1" class="switch-active">Машины</li>
+                <li data-query="q2">Водители</li>
+                <li data-query="q3">Машина по id, водитель по id</li>
+                <li data-query="q4">Поиск машин</li>
+                <li data-query="q5">Поиск водителей</li>
+                <li data-query="q6">Сложный запрос</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header panel-blue">Модификация данных</div>
+        <div class="panel-body">
+            <ul id="switch-mutator" class="switch switch-query" data-selector=".switch-query">
+                <li data-query="m1">Добавить машину</li>
+                <li data-query="m2">Добавить водителя</li>
+                <li data-query="m3">Привязать водителя</li>
+                <li data-query="m3a">+ вывести список водителей</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<h2>GraphQL запрос</h2>
+
+<div class="flex-container">
+    <div class="panel">
+        <div class="panel-header">Запрос</div>
+        <div class="panel-body">
+            <textarea id="query" class="editor" rows="17"></textarea>
+            <div class="controls">
+                <button id="run">Выполнить</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">Переменные</div>
+        <div class="panel-body">
+            <textarea id="variables" class="editor" rows="17"></textarea>
+        </div>
+    </div>
+
+    <div class="panel" id="response">
+        <div class="panel-header">Ответ</div>
+        <div class="panel-body">
+            <textarea class="editor" rows="20" readonly></textarea>
+        </div>
+    </div>
+</div>
+
+<h2 style="display: none;">Визуализация</h2>
+
+<div id="render" style="display: none;">
+</div>
+
+<h2>SQL запросы</h2>
+
+<div id="sql" class="flex-container">
+</div>
+
+<h2>Схема</h2>
+
+<div id="docs" class="flex-container">
+<div class="docs-pre">type Car {
+    carId: ID!
+    model: String!
+    color: String!
+    plateNumber: String
+    drivers(
+        offset: Int = 0
+        limit: Int = 20
+        sort: DriverSort = DRIVER_ID
+        dir: SortDir = ASC
+    ): [Driver!]!
+}
+
+type Driver {
+    driverId: ID!
+    carId: ID
+    name: String!
+    license: String
+    car: Car
+}
+
+type Bind {
+    car: Car!
+    driver: Driver!
+    changed: Boolean!
+}</div>
+<div class="docs-pre">type Query {
+    cars(
+        offset: Int = 0
+        limit: Int = 20
+        filter: String = ""
+        sort: CarSort = CAR_ID
+        dir: SortDir = ASC
+    ): [Car!]!
+
+    drivers(
+        offset: Int = 0
+        limit: Int = 20
+        filter: String = ""
+        sort: DriverSort = DRIVER_ID
+        dir: SortDir = ASC
+    ): [Driver!]!
+
+    carById(id: ID!): Car
+
+    driverById(id: ID!): Driver
+}</div>
+<div class="docs-pre">type Mutation {
+    addCar(fields: CarInput!): Car!
+    addDriver(fields: DriverInput!): Driver!
+    bind(carId: ID, driverId: ID): Bind!
+}
+
+input CarInput {
+    model: String!
+    color: String!
+    plateNumber: String
+}
+
+input DriverInput {
+    name: String!
+    license: String
+}
+
+input BindInput {
+    carId: ID!
+    driverId: ID!
+}</div>
+<div class="docs-pre">enum SortDir {
+    ASC
+    DESC
+}
+
+enum CarSort {
+    CAR_ID
+    MODEL
+    COLOR
+    PLATE_NUMBER
+}
+
+enum DriverSort {
+    DRIVER_ID
+    NAME
+    LICENSE
+}</div>
+</div>
+
+<script src="helpers.js"></script>
+<script src="queries.js"></script>
+<script src="index.js"></script>
+</body>
+</html>

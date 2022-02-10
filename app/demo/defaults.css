@@ -1,0 +1,40 @@
+html {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+html, body {
+    font-family: sans-serif;
+}
+
+ul, ol, h1, h2, h3, pre {
+    margin: 0.5em 0 0.5em 0;
+}
+
+textarea {
+    box-sizing: border-box;
+    resize: none;
+    overflow: auto;
+}
+
+a:hover, a:visited {
+    color: #0645AD;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+ul, ol {
+    padding-left: 1em
+}
+
+li {
+    padding-left: 0.3em;
+    margin-bottom: 0.3em;
+}
+
+pre, textarea {
+    font-size: 12px;
+    line-height: normal;
+}
