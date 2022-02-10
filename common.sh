@@ -108,6 +108,7 @@ common_net()
 {
   if ! which firewall-cmd 1> /dev/null 2>&1; then
     print_header 'Донастройка сети не требуется'
+    return
   fi
 
   print_header 'Донастройка сети'
@@ -115,7 +116,7 @@ common_net()
   local -a X=( )
   local Y
   for Y in "$@"; do
-    X+=( --add-interface="br-${PROJECT}_$Y" )
+    X+=( --add-interface="br-${BRIDGE}-$Y" )
   done
 
   print_warning 'Обнаружен firewalld'
