@@ -7,7 +7,7 @@ networks:
   net:
     driver: bridge
     driver_opts:
-      com.docker.network.bridge.name: br-${PROJECT}_net
+      com.docker.network.bridge.name: br-${BRIDGE-graphql-te}-1
 
 services:
   db:

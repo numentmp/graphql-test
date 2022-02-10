@@ -6,7 +6,9 @@ set -o pipefail
 
 declare -g SCRIPT_DIR=`pwd`
 declare -g PROJECT=`basename "$SCRIPT_DIR"`
+declare -g BRIDGE="${PROJECT:0:10}"
 export PROJECT
+export BRIDGE
 
 declare -g FILE='docker-compose.yml'
 
