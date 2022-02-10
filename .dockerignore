@@ -11,3 +11,5 @@
 /dev.*
 /demo.*
 /prod.*
+
+/docs
