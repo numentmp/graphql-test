@@ -16,8 +16,10 @@ declare -g SCRIPT_DIR=`dirname "$0"`
 cd "$SCRIPT_DIR" || exit 1
 source common.sh || exit 1
 
-FILE='dev.yml'
-ACTIONS+=( 'mysql' 'bash' 'help' )
+COMPOSE_FILE='dev.yml'
+ACTIONS+=( 'prep' 'mysql' 'bash' 'help' )
+
+MAIN='app'
 
 action()
 {
@@ -25,6 +27,9 @@ action()
   shift 1
 
   case "$ACTION" in
+    prep)
+      prepare_yml
+      ;;
     up)
       common_mk_file '.env' \
         DEV_UID=`id -u` \
@@ -41,18 +46,18 @@ action()
       echo
       common_rm_vol data
       echo
-      common_rm_img dev
+      common_rm_img "$MAIN"
       ;;
     mysql)
       common_mysql db "$@"
       ;;
     bash)
-      common_bash dev "$@"
+      common_bash "$MAIN" "$@"
       ;;
     help)
       common_help_act
       printf '%q mysql [...] - запуск mysql cli в контейнере db\n' "$0"
-      printf '%q bash [...]  - запуск bash в контейнере dev\n' "$0"
+      printf '%q bash [...]  - запуск bash в контейнере %s\n' "$0" "$MAIN"
       echo
       print_header 'Используемые переменные окружения и значения по умолчанию'
       echo
@@ -65,7 +70,7 @@ action()
       echo 'DEV_UID (UID пользователя host-системы)'
       echo 'DEV_GID (GID пользователя host-системы)'
       echo
-      echo 'DEV_UID и DEV_GID используются для запуска процессов в контейнере dev,'
+      echo "DEV_UID и DEV_GID используются для запуска процессов в контейнере $MAIN,"
       echo 'чтобы все файлы в каталоге app были доступны и принадлежали одному'
       echo 'пользователю - разработчику. Если файл .env не существует, будет'
       echo 'предложено создать его автоматически с UID/GID текущего пользователя.'

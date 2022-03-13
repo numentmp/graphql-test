@@ -16,8 +16,10 @@ declare -g SCRIPT_DIR=`dirname "$0"`
 cd "$SCRIPT_DIR" || exit 1
 source common.sh || exit 1
 
-FILE='demo.yml'
-ACTIONS+=( 'mysql' 'bash' 'help' )
+COMPOSE_FILE='demo.yml'
+ACTIONS+=( 'prep' 'mysql' 'bash' 'help' )
+
+MAIN='app'
 
 action()
 {
@@ -25,6 +27,9 @@ action()
   shift 1
 
   case "$ACTION" in
+    prep)
+      prepare_yml
+      ;;
     up)
       common_build
       echo
@@ -37,18 +42,18 @@ action()
       echo
       common_rm_vol data
       echo
-      common_rm_img app
+      common_rm_img "$MAIN"
       ;;
     mysql)
       common_mysql db "$@"
       ;;
     bash)
-      common_bash app "$@"
+      common_bash "$MAIN" "$@"
       ;;
     help)
       common_help_act
       printf '%q mysql [...] - запуск mysql cli в контейнере db\n' "$0"
-      printf '%q bash [...]  - запуск bash в контейнере app\n' "$0"
+      printf '%q bash [...]  - запуск bash в контейнере %s\n' "$0" "$MAIN"
       echo
       print_header 'Используемые переменные окружения и значения по умолчанию'
       echo

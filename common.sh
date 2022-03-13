@@ -10,7 +10,10 @@ declare -g BRIDGE="${PROJECT:0:10}"
 export PROJECT
 export BRIDGE
 
-declare -g FILE='docker-compose.yml'
+declare -g COMPOSE_FILE='docker-compose.yml'
+declare -g COMPOSE_DIR='compose.d'
+
+declare -g ATTACH=''
 
 declare -g -a ACTIONS=( 'up' 'down' )
 
@@ -48,8 +51,11 @@ run_cmd()
 {
   print_cmd '$' "$@"
 
-  if ! "$@"; then
-    print_error "Выполнение команды завершилось ошибкой"
+  local R=0
+  "$@" || R="$?"
+
+  if [ x"$R" != x'0' ]; then
+    print_error "Выполнение команды завершилось ошибкой ($R)"
     exit 1
   fi
 }
@@ -58,8 +64,11 @@ try_cmd()
 {
   print_cmd '$' "$@"
 
-  if ! "$@"; then
-    print_warning "Выполнение команды завершилось ошибкой"
+  local R=0
+  "$@" || R="$?"
+
+  if [ x"$R" != x'0' ]; then
+    print_warning "Выполнение команды завершилось ошибкой ($R)"
   fi
 }
 
@@ -90,18 +99,59 @@ confirm()
   done
 }
 
+get_env()
+{
+  local NAME="$1"
+  local DEF="$2"
+
+  if [ ! -f '.env' ]; then
+    printf '%s' "$DEF"
+    return 0
+  fi
+
+  local LINE=`egrep -m 1 -e "^$NAME=" < '.env' || true`
+  if [ -z "$LINE" ]; then
+    printf '%s' "$DEF"
+    return 0
+  fi
+
+  printf '%s' "${LINE#*=}"
+}
+
+prepare_yml()
+{
+  printf '' > "$COMPOSE_FILE"
+
+  local FILE
+  local SUFFIX
+  while IFS='' read -r FILE; do
+    SUFFIX="${FILE#*.}"
+    if [ x"$SUFFIX" == x"yml" ] || [ x"$SUFFIX" == x"$COMPOSE_FILE" ]; then
+      fgrep -v -e '# ignore line' < "$COMPOSE_DIR/$FILE" \
+        >> "$COMPOSE_FILE"
+    fi
+  done < <(
+    find "$COMPOSE_DIR" \
+      -mindepth 1 \
+      -maxdepth 1 \
+      -name '*.yml' \
+      -printf '%P\n' \
+      | sort
+  )
+}
+
 common_build()
 {
   if confirm y 'Выполнить сборку? [Y/n]'; then
     print_header 'Сборка'
-    run_cmd docker-compose -f "$FILE" build
+    run_cmd docker-compose -f "$COMPOSE_FILE" build
   fi
 }
 
 common_up()
 {
   print_header 'Запуск сервисов'
-  run_cmd docker-compose -f "$FILE" up "$@" -d
+  run_cmd docker-compose -f "$COMPOSE_FILE" up "$@" -d
 }
 
 common_net()
@@ -129,12 +179,28 @@ common_net()
 common_down()
 {
   print_header 'Остановка сервисов'
-  try_cmd docker-compose -f "$FILE" down
+  try_cmd docker-compose -f "$COMPOSE_FILE" down
+}
+
+common_attach()
+{
+  local CONTAINER="$1"
+  shift 1
+
+  print_header "Присоединение к контейнеру $CONTAINER"
+  printf 'Для отсоединения от контейнера используйте \e[97mCTRL+P CTRL+Q\e[0m\n'
+  try_cmd docker attach "${PROJECT}_${CONTAINER}_1"
 }
 
 common_ready()
 {
   print_header 'ГОТОВО'
+
+  if [ -n "$ATTACH" ]; then
+    echo
+    common_attach "$ATTACH"
+  fi
+
   echo
   if confirm y 'Остановить и удалить сервисы? [Y/n]'; then
     return
@@ -142,6 +208,9 @@ common_ready()
 
   echo
   printf 'Для остановки сервисов и очистки выполните \e[97m%q down\e[0m\n' "$0"
+  if [ -n "$ATTACH" ]; then
+    printf 'Для повторного подключения к контейнеру выполните \e[97m%q attach\e[0m\n' "$0"
+  fi
   exit 0
 }
 
@@ -178,7 +247,7 @@ common_rm_img()
 common_cmd()
 {
   print_header 'Запуск произвольной команды'
-  run_cmd docker-compose -f "$FILE" "$@"
+  run_cmd docker-compose -f "$COMPOSE_FILE" "$@"
 }
 
 common_mysql()
@@ -187,8 +256,11 @@ common_mysql()
   shift 1
 
   print_header "Подключение к базе данных в $CONTAINER"
-  run_cmd docker-compose -f "$FILE" exec "$CONTAINER" \
-    mysql --user=root --password "$@"
+
+  local PASSWORD=`get_env MYSQL_ROOT_PASSWORD password`
+
+  run_cmd docker-compose -f "$COMPOSE_FILE" exec "$CONTAINER" \
+    mysql --user=root --password="$PASSWORD" "$@"
 }
 
 common_bash()
@@ -197,7 +269,7 @@ common_bash()
   shift 1
 
   print_header "Запуск bash в $CONTAINER"
-  run_cmd docker-compose -f "$FILE" exec "$CONTAINER" \
+  run_cmd docker-compose -f "$COMPOSE_FILE" exec "$CONTAINER" \
     bash "$@"
 }
 
@@ -298,5 +370,5 @@ proc()
   fi
 
   print_header 'Запуск произвольной команды'
-  run_cmd docker-compose -f "$FILE" "$ACTION" "$@"
+  run_cmd docker-compose -f "$COMPOSE_FILE" "$ACTION" "$@"
 }

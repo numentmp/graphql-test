@@ -23,7 +23,6 @@ services:
     volumes:
       - "data:/var/lib/mysql"
       - "./initdb.d:/docker-entrypoint-initdb.d:z"
-
   app:
     build:
       context: .
